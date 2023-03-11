@@ -21,7 +21,6 @@ formatter = logging.Formatter('%(asctime)s, %(levelname)s, %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
@@ -39,7 +38,7 @@ HOMEWORK_VERDICTS = {
 
 
 def check_tokens() -> None:
-    '''Проверяет доступность переменных окружения.'''
+    """Проверяет доступность переменных окружения."""
     if not all([PRACTICUM_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_TOKEN]):
         logging.critical('Отсутствуют обязательные переменные бота')
         logging.info('Программа остановлена')
@@ -48,10 +47,10 @@ def check_tokens() -> None:
 
 
 def send_message(bot: telegram.Bot, message: str) -> None:
-    '''
+    """
     Отправляет сообщение в Telegram чат, определяемый TELEGRAM_CHAT_ID.
     Принимает два параметра: экземпляр класса Bot и строку с текстом сообщения.
-    '''
+    """
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logging.debug(f'Сообщение {message} отправлено')
@@ -62,11 +61,11 @@ def send_message(bot: telegram.Bot, message: str) -> None:
 
 
 def get_api_answer(timestamp: int) -> dict:
-    '''
+    """
     Делает запрос к API-сервису Практикума.
     Принимает временную метку,
     при успешном запросе возвращает ответ в формате JSON.
-    '''
+    """
     try:
         homeworks = requests.get(
             ENDPOINT, headers=HEADERS, params={'from_date': timestamp}
@@ -86,11 +85,11 @@ def get_api_answer(timestamp: int) -> dict:
 
 
 def check_response(response: dict) -> dict:
-    '''
+    """
     Проверяет ответ API на соответствие документации.
     Вкачестве параметра функция получает ответ API,
     приведенный к типам данных Python.
-    '''
+    """
     if not isinstance(response, dict):
         error_message = 'Ответ от API не является словарем'
         logging.error(error_message)
@@ -110,12 +109,12 @@ def check_response(response: dict) -> dict:
 
 
 def parse_status(homework: dict) -> str:
-    '''
+    """
     Извлекает из информации о конкретной домашней работе статус этой работы.
     В функцию передается один элемент из списка домашних работ.
     В случае успеха, функция возвращает строку для отправки в Telegram,
     содержащую один из вердиктов словаря HOMEWORK_VERDICTS.
-    '''
+    """
     homework_keys = ['status', 'homework_name']
     for key in homework_keys:
         if key not in homework:
@@ -134,12 +133,12 @@ def parse_status(homework: dict) -> str:
 
 
 def main() -> None:
-    '''Основная логика работы бота.'''
+    """Основная логика работы бота."""
     logging.info('Программа запущена')
     check_tokens()
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     send_message(bot, 'Начинаю проверку домашних работ')
-    timestamp = 0  # int(time.time())
+    timestamp = int(time.time())
     last_message = ''
     last_error = ''
     while True:
