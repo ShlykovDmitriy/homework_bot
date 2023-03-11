@@ -84,7 +84,7 @@ def get_api_answer(timestamp: int) -> dict:
         raise RequestStatusError(error_message)
 
 
-def check_response(response: dict) -> dict:
+def check_response(response: dict) -> list:
     """
     Проверяет ответ API на соответствие документации.
     Вкачестве параметра функция получает ответ API,
@@ -105,7 +105,7 @@ def check_response(response: dict) -> dict:
         error_message = 'Homeworks не является списком'
         logging.error(error_message)
         raise TypeError(error_message)
-    return homeworks[0]
+    return homeworks
 
 
 def parse_status(homework: dict) -> str:
@@ -137,16 +137,20 @@ def main() -> None:
     logging.info('Программа запущена')
     check_tokens()
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    send_message(bot, 'Начинаю проверку домашних работ')
+    send_message(bot, 'Бот запущен. Напишу когда статус работы будет изменен.')
     timestamp = int(time.time())
-    last_message = ''
+    last_message = 'Обновление статуса работы отсутствует'
     last_error = ''
     while True:
         try:
             response = get_api_answer(timestamp)
             timestamp = response['current_date']
-            homework = check_response(response)
-            message = parse_status(homework)
+            homeworks = check_response(response)
+            if homeworks:
+                message = parse_status(homeworks[0])
+            else:
+                logging.info('Список домашних работ пуст')
+                message = last_message
             if message != last_message:
                 send_message(bot, message)
                 last_message = message
