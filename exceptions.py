@@ -8,11 +8,6 @@ class KeyNotFound(Exception):
     ...
 
 
-class SendMessageError(Exception):
-    '''Обрабатывает исключение, при неудачной отправке сообщения'''
-    ...
-
-
 class VerdictNotFound(Exception):
     '''Обрабатывает исключение, при неожиданном статусе домашней работы'''
     ...
