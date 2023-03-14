@@ -70,13 +70,10 @@ def get_api_answer(timestamp: int) -> dict:
         )
     except requests.exceptions.RequestException as error:
         raise RequestStatusError(f'Ошибка при выполнении запроса:{error}')
-    try:
-        if homeworks.status_code != HTTPStatus.OK:
-            raise RequestStatusError('Ошибка при выполнении запроса.'
-                                     f'Статус:{homeworks.status_code}.')
-        logger.info('Ответ от API получен.')
-    except RequestStatusError as error:
-        raise RequestStatusError(f'Ошибка при выполнении запроса:{error}')
+    if homeworks.status_code != HTTPStatus.OK:
+        raise RequestStatusError('Ошибка при выполнении запроса.'
+                                 f'Статус:{homeworks.status_code}.')
+    logger.info('Ответ от API получен.')
     return homeworks.json()
 
 
@@ -87,20 +84,14 @@ def check_response(response: dict) -> list:
     приведенный к типам данных Python.
     """
     if not isinstance(response, dict):
-        error_message = 'Ответ от API не является словарем'
-        logger.error(error_message)
-        raise TypeError(error_message)
+        raise TypeError('Ответ от API не является словарем')
     response_keys = ['homeworks', 'current_date']
     for key in response_keys:
         if key not in response:
-            error_message = 'В ответе от API отсутствуeт ключ: {key}.'
-            logger.error(error_message)
-            raise KeyNotFound(error_message)
+            raise KeyNotFound('В ответе от API отсутствуeт ключ: {key}.')
     homeworks = response['homeworks']
     if not isinstance(homeworks, list):
-        error_message = 'Homeworks не является списком'
-        logger.error(error_message)
-        raise TypeError(error_message)
+        raise TypeError('Homeworks не является списком')
     return homeworks
 
 
@@ -114,15 +105,11 @@ def parse_status(homework: dict) -> str:
     homework_keys = ['status', 'homework_name']
     for key in homework_keys:
         if key not in homework:
-            error_message = f'У списка homeworks отсутствуeт ключ: {key}.'
-            logger.error(error_message)
-            raise KeyNotFound(error_message)
+            raise KeyNotFound(f'У списка homeworks отсутствуeт ключ: {key}.')
     homework_name = homework['homework_name']
     homework_status = homework['status']
     if homework_status not in HOMEWORK_VERDICTS:
-        error_message = 'Неожиданный статус домашней работы.'
-        logger.error(error_message)
-        raise VerdictNotFound(error_message)
+        raise VerdictNotFound('Неожиданный статус домашней работы.')
     verdict = HOMEWORK_VERDICTS[homework_status]
     logger.info('Сообщение для отправки подготовлено.')
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
@@ -147,16 +134,14 @@ def main() -> None:
                 message = parse_status(homeworks[0])
             else:
                 logger.info('Список домашних работ пуст')
-            if message != last_message:
-                if send_message(bot, message):
-                    timestamp = response['current_date']
-                    last_message = message
+            if send_message(bot, message) and message != last_message:
+                timestamp = response['current_date']
+                last_message = message
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
-            if last_message != message:
-                if send_message(bot, message):
-                    last_message = message
+            if send_message(bot, message) and last_message != message:
+                last_message = message
         finally:
             time.sleep(RETRY_PERIOD)
 
