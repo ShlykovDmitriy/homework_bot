@@ -134,13 +134,13 @@ def main() -> None:
                 message = parse_status(homeworks[0])
             else:
                 logger.info('Список домашних работ пуст')
-            if send_message(bot, message) and message != last_message:
+            if message != last_message and send_message(bot, message):
                 timestamp = response['current_date']
                 last_message = message
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
-            if send_message(bot, message) and last_message != message:
+            if message != last_message and send_message(bot, message):
                 last_message = message
         finally:
             time.sleep(RETRY_PERIOD)
